@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apple Lots</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f4ef;--card:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#c0392b;--bd:#e3e0d8;--ok:#1e7a4a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#161615;--card:#222220;--tx:#f1efe9;--mu:#a09e96;--ac:#ff6b5b;--bd:#35342f;--ok:#4cc28a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#161615;--card:#222220;--tx:#f1efe9;--mu:#a09e96;--ac:#ff6b5b;--bd:#35342f;--ok:#4cc28a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;font-size:15px;font-weight:600}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+input,select,textarea{width:100%;padding:13px;font-size:17px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx)}
+textarea{min-height:200px;font:14px/1.4 ui-monospace,Menlo,monospace}
+.row{display:flex;gap:8px;margin:10px 0}
+.row>*{flex:1}
+.sum{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.pill{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-size:14px;color:var(--mu)}
+.pill b{color:var(--tx);font-size:16px}
+.lot{display:grid;grid-template-columns:1fr auto;gap:2px 10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.k{font-size:19px;font-weight:700}
+.q{font-size:14px;color:var(--mu)}
+.q b{color:var(--tx);font-size:19px}
+.n{grid-column:1/3;display:flex;gap:16px;font-size:14px;color:var(--mu);flex-wrap:wrap;margin-top:4px}
+.n b{color:var(--tx)}
+.nbp b{color:var(--ok)}
+.sr{font-size:12px;color:var(--mu)}
+button.act{padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:15px;font-weight:600}
+button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+.msg{margin:10px 0;font-size:14px;color:var(--mu)}
+.err{color:var(--ac)}
+.empty{text-align:center;color:var(--mu);padding:30px 0}
+label{font-size:13px;color:var(--mu)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🍎 Apple Lots</h1>
+<div class="tabs">
+<button class="tab on" id="t1">Search</button>
+<button class="tab" id="t2">Update list</button>
+</div>
+
+<div id="v1">
+<input id="q" type="search" placeholder="Search khata or quantity (e.g. GMD, 21, GMD 21)" autocomplete="off" autocapitalize="characters" enterkeyhint="search">
+<div class="row">
+<select id="sort">
+<option value="sr">Sort: List order</option>
+<option value="qd">Quantity: high to low</option>
+<option value="qa">Quantity: low to high</option>
+<option value="rd">Rate: high to low</option>
+<option value="ra">Rate: low to high</option>
+<option value="k">Khata A–Z</option>
+</select>
+</div>
+<div class="sum" id="sum"></div>
+<div id="res"></div>
+</div>
+
+<div id="v2" class="hide">
+<p class="msg">Paste the new list below. Each line: <b>khata quantity rate</b> (e.g. <i>GMD 21 700</i>). The full format from your PDF (with Sr No, weight, NBP) also works. Header and TOTAL lines are skipped.</p>
+<textarea id="ta" placeholder="GMD 21 700&#10;AID 6 550&#10;MAD 12 1250"></textarea>
+<div class="row">
+<div><label>Average weight (kg)</label><input id="aw" type="number" step="0.1" value="12.8" inputmode="decimal"></div>
+</div>
+<div class="row">
+<button class="act pri" id="rep">Replace list</button>
+<button class="act" id="add">Add to list</button>
+</div>
+<div class="row"><button class="act" id="rst">Reset to sample list</button></div>
+<div class="msg" id="msg"></div>
+</div>
+</div>
+
+<script>
+var SAMPLE="GMD 21 700\nAID 6 550\nMAD 12 1250\nGAP 14 750\nMAW 4 550\nMAW 7 1050\nGNL 10 550\nNO KHATA 21 650\nSYFT 5 600\nGAP DABA 22 600\nFAB 11 800\nGMS 9 1050\nGMS 8 650\nJDR 10 900\nMAA 1 650\nMAA 3 1100\nAMISH 44 1400\nMOHD AYUB 22 1150\nMOHD AYUB 12 1100\nARHAMN 12 1250\nARHAMN 18 700\nIMAD 25 750\nIMAD 27 570\nFAYAZ AHMAD 24 750\nIBRAHIM 18 1150\nFA LONE 18 1550\nRAB 13 1450\nFFCZ DABA 15 650\nFFCM DABA 14 620\nMEHRAAN 33 650\nSUFFA 16 900\nMSBK 27 800\nMHR 24 600\nIQWRA 27 1300\nUSGD 13 900\nHZM 21 1400\nMUDASIR 10 650\nTAIBA 10 900\nGMD 35 1100\nGMS 5 1150\nGMD 8 800\nGMD 7 750\nAARIF 34 650\nTTA 8 500\nHAGS 12 1250\nMK DAR 17 700\nFAIZAN 7 1150\nNB 21 1150\nGAP DABA 18 600\nUMER JAAN 18 650\nABU HAMZA 12 1200\nSAB 50 1200\nFAIZAN 3 650\nJAR DABA 120 620\nFAR 5 1150\nFAR 2 650\nMAB 22 1100\nGMD 14 550\nM+B 15 750\nM+B 3 650\nHAGS 32 1400\nAB MANAN 4 950\nMAG 2 650\nHMT 2 550\nBAD 32 700\nAFC 41 1250\nAKIB 23 1180\nAF 6 1100\nAQSA 50 1200\nAM 55 1250\nNO KHATA 12 600\nARHAN 28 1400\nS FRUITS 119 750\nMMT 10 900\nRFT 16 600\nNO JKHATA 12 650\nARS 22 650\nSADIYA 34 750\nSADIYA 16 450\nMAR 14 750\nAF 6 900\nMMT 2 480";
+var KEY="appleLots.v1",lots=[],avg=12.8;
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function parse(text,aw){
+  var out=[],bad=[],lines=String(text).split(/\r?\n/);
+  for(var i=0;i<lines.length;i++){
+    var l=lines[i].replace(/\s+/g," ").trim();
+    if(!l||/^sr\b/i.test(l)||/^total\b/i.test(l))continue;
+    var m=l.match(/^(?:\d+ )?(.+?) (\d+) ([\d,]+(?:\.\d+)?)(?: [\d.]+ [\d.]+)?$/);
+    if(!m){bad.push(l);continue}
+    var rate=parseFloat(m[3].replace(/,/g,""));
+    if(!isFinite(rate)){bad.push(l);continue}
+    out.push({k:m[1].toUpperCase(),q:parseInt(m[2],10),r:rate,n:Math.round(rate/aw*100)/100});
+  }
+  return{lots:out,bad:bad};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({lots:lots,avg:avg}))}catch(e){}}
+function load(){
+  try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&d.lots&&d.lots.length){lots=d.lots;avg=d.avg||12.8;return}}}catch(e){}
+  lots=parse(SAMPLE,12.8).lots;avg=12.8;
+}
+function fmt(n){return n.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:2})}
+function render(){
+  var q=$("q").value.trim().toUpperCase(),sort=$("sort").value;
+  var toks=q?q.split(/\s+/):[],nums=[],txt=[];
+  toks.forEach(function(t){if(/^\d+$/.test(t))nums.push(parseInt(t,10));else txt.push(t)});
+  var list=lots.map(function(x,i){x.i=i+1;return x}).filter(function(x){
+    for(var a=0;a<nums.length;a++)if(x.q!==nums[a])return false;
+    for(var b=0;b<txt.length;b++)if(x.k.indexOf(txt[b])<0)return false;
+    return true;
+  });
+  var s={sr:function(a,b){return a.i-b.i},qd:function(a,b){return b.q-a.q},qa:function(a,b){return a.q-b.q},rd:function(a,b){return b.r-a.r},ra:function(a,b){return a.r-b.r},k:function(a,b){return a.k<b.k?-1:a.k>b.k?1:b.q-a.q}}[sort];
+  list.sort(s);
+  var boxes=0;list.forEach(function(x){boxes+=x.q});
+  $("sum").innerHTML='<div class="pill"><b>'+list.length+'</b> lots</div><div class="pill"><b>'+fmt(boxes)+'</b> boxes</div>'+(q?'':'<div class="pill">Avg weight <b>'+avg+'</b> kg</div>');
+  if(!list.length){$("res").innerHTML='<div class="empty">No lots found</div>';return}
+  $("res").innerHTML=list.map(function(x){
+    return '<div class="lot"><div class="k">'+esc(x.k)+'</div><div class="q">Qty <b>'+x.q+'</b></div>'+
+    '<div class="n"><span>Rate <b>₹'+fmt(x.r)+'</b></span><span>Avg wt <b>'+avg+' kg</b></span><span class="nbp">NBP <b>₹'+x.n.toFixed(2)+'</b></span><span class="sr">#'+x.i+'</span></div></div>';
+  }).join("");
+}
+function tab(n){
+  $("v1").className=n==1?"":"hide";$("v2").className=n==2?"":"hide";
+  $("t1").className="tab"+(n==1?" on":"");$("t2").className="tab"+(n==2?" on":"");
+  if(n==1)render();
+}
+function note(t,e){var m=$("msg");m.className="msg"+(e?" err":"");m.innerHTML=t}
+function doImport(replace){
+  var aw=parseFloat($("aw").value);
+  if(!isFinite(aw)||aw<=0){note("Enter a valid average weight.",1);return}
+  var r=parse($("ta").value,aw);
+  if(!r.lots.length){note("No valid lines found. Use: khata quantity rate",1);return}
+  if(r.bad.length){note("Not saved. "+r.bad.length+" line(s) could not be read:<br>"+r.bad.slice(0,5).map(esc).join("<br>"),1);return}
+  if(replace){lots=r.lots;avg=aw}else{
+    if(aw!==avg){note("Average weight differs from current list ("+avg+"). Use Replace list instead.",1);return}
+    lots=lots.concat(r.lots);
+  }
+  save();$("ta").value="";note("Done. List now has "+lots.length+" lots.");$("q").value="";
+}
+$("t1").onclick=function(){tab(1)};
+$("t2").onclick=function(){tab(2)};
+$("q").oninput=render;$("sort").onchange=render;
+$("rep").onclick=function(){doImport(true)};
+$("add").onclick=function(){doImport(false)};
+$("rst").onclick=function(){lots=parse(SAMPLE,12.8).lots;avg=12.8;save();$("aw").value="12.8";note("Reset. Sample list loaded ("+lots.length+" lots).")};
+load();$("aw").value=avg;render();
+</script>
+</body>
+</html>
